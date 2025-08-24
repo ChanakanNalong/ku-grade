@@ -1,6 +1,9 @@
 # ใช้ Node.js เวอร์ชัน LTS
 FROM node:18-alpine
 
+# ติดตั้ง bash
+RUN apk add --no-cache bash
+
 # ตั้งค่า working directory
 WORKDIR /app
 
@@ -11,8 +14,12 @@ RUN npm install
 # คัดลอกโค้ดทั้งหมดเข้า container
 COPY . .
 
-# เปิด port 5000 (หรือ port ที่ backend ใช้)
+# คัดลอก wait-for-it.sh เข้ามา และตั้ง permission ให้รันได้
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+# เปิด port 5000 (หรืdocอ port ที่ backend ใช้)
 EXPOSE 5000
 
 # คำสั่งเริ่มต้นรัน backend
-CMD ["node", "index.js"]
+CMD ["/wait-for-it.sh", "database:3306", "--", "node", "server.js"]

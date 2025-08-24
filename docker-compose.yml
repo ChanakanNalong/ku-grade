@@ -1,32 +1,52 @@
-version: "3.8"
+version: "3.9"
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:80"   # React serve ผ่าน nginx
-
   backend:
     build: ./backend
+    container_name: ku-grade-backend
     ports:
       - "5000:5000"
-    depends_on:
-      - mysql_db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     environment:
-      - DB_HOST=mysql_db
+      - DB_HOST=database
       - DB_USER=root
-      - DB_PASS=rootpassword
-      - DB_NAME=mydb
+      - DB_PASSWORD="@Kan11113@05110405"
+      - DB_NAME=ku-grade
+    command: ["/wait-for-it.sh", "database:3306", "--", "node", "server.js"]
+    depends_on:
+      - database
 
-  mysql_db:
-    image: mysql:8
+  frontend:
+    build: ./frontend
+    container_name: ku-grade-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:5000
+
+  database:
+    image: mysql:8.0.43
+    container_name: ku-grade-database
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_PASSWORD: "@Kan11113@05110405"
+      MYSQL_DATABASE: ku-grade
     ports:
-      - "3307:3306"
+      - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  mysql_data:
+  db_data:

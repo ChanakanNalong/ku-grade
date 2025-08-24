@@ -1,42 +1,27 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import api from "./api";
-import { useEffect, useState } from "react";
+// frontend/src/App.jsx
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
-export default function App() {
-  const [me, setMe] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.get("/auth/me");
-        setMe(res.data.user);
-      } catch { /* not logged in */ }
-    })();
-  }, []);
-
-  const logout = async () => {
-    await api.post("/auth/logout");
-    setMe(null);
-  };
-
+function App() {
   return (
-    <BrowserRouter>
-      <nav style={{ display: "flex", gap: 12, padding: 12 }}>
-        <Link to="/">Home</Link>
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
-        {me && <button onClick={logout}>Logout</button>}
-        <span style={{ marginLeft: "auto" }}>
-          {me ? `👋 ${me.name || me.email}` : "ยังไม่ล็อกอิน"}
-        </span>
+    <div>
+      <nav>
+        <ul>
+          <li><Link to="/login">Login</Link></li>
+          <li><Link to="/register">Register</Link></li>
+        </ul>
       </nav>
+      <hr />
       <Routes>
-        <Route path="/" element={<div style={{ padding: 24 }}>หน้าแรก</div>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        {/* คุณสามารถเพิ่ม Route หน้าหลักได้ที่นี่ */}
+        <Route path="/" element={<h2>Home Page</h2>} />
       </Routes>
-    </BrowserRouter>
+    </div>
   );
 }
+
+export default App;

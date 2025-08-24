@@ -1,42 +1,75 @@
-import { useState } from "react";
-import api from "../api";
+// frontend/src/pages/Register.jsx
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-export default function Register() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [msg, setMsg] = useState("");
+function Register() {
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: ''
+    });
+    const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, email, password } = formData;
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setMsg("");
-    try {
-      const res = await api.post("/auth/register", form);
-      setMsg(`สมัครสำเร็จ: ${res.data.user.email}`);
-    } catch (err) {
-      setMsg(err?.response?.data?.message || "เกิดข้อผิดพลาด");
-    }
-  };
+    const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  return (
-    <div style={{ maxWidth: 420, margin: "40px auto" }}>
-      <h2>สมัครสมาชิก</h2>
-      <form onSubmit={onSubmit}>
+    const onSubmit = async e => {
+        e.preventDefault();
+        try {
+            const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+            setMessage(res.data.message);
+            // ถ้าสำเร็จ ให้ไปหน้า login หลังจาก 2 วินาที
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+        } catch (err) {
+            setMessage(err.response.data.message);
+        }
+    };
+
+    return (
         <div>
-          <label>ชื่อ</label>
-          <input name="name" value={form.name} onChange={onChange} />
+            <h2>Register</h2>
+            <form onSubmit={onSubmit}>
+                <div>
+                    <input
+                        type="text"
+                        placeholder="Name"
+                        name="name"
+                        value={name}
+                        onChange={onChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <input
+                        type="email"
+                        placeholder="Email Address"
+                        name="email"
+                        value={email}
+                        onChange={onChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        name="password"
+                        value={password}
+                        onChange={onChange}
+                        minLength="6"
+                        required
+                    />
+                </div>
+                <input type="submit" value="Register" />
+            </form>
+            {message && <p>{message}</p>}
         </div>
-        <div>
-          <label>Email</label>
-          <input name="email" type="email" value={form.email} onChange={onChange} required />
-        </div>
-        <div>
-          <label>Password</label>
-          <input name="password" type="password" value={form.password} onChange={onChange} required />
-        </div>
-        <button type="submit">Register</button>
-      </form>
-      {msg && <p>{msg}</p>}
-    </div>
-  );
+    );
 }
+
+export default Register;

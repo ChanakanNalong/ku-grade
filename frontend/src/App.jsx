@@ -1,25 +1,40 @@
-// frontend/src/App.jsx
-import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
-import Login from './pages/Login';
-import Register from './pages/Register';
+// src/App.js
+import { useState } from "react";
 
 function App() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = async () => {
+    const res = await fetch("http://localhost:5000/register", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    alert(data.message);
+  };
+
+  const handleLogin = async () => {
+    const res = await fetch("http://localhost:5000/login", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    alert(data.message);
+    if (res.status === 200) {
+      window.location.href = "/dashboard"; // redirect
+    }
+  };
+
   return (
     <div>
-      <nav>
-        <ul>
-          <li><Link to="/login">Login</Link></li>
-          <li><Link to="/register">Register</Link></li>
-        </ul>
-      </nav>
-      <hr />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        {/* คุณสามารถเพิ่ม Route หน้าหลักได้ที่นี่ */}
-        <Route path="/" element={<h2>Home Page</h2>} />
-      </Routes>
+      <h1>Login/Register</h1>
+      <input value={username} onChange={(e)=>setUsername(e.target.value)} placeholder="Username"/>
+      <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password"/>
+      <button onClick={handleRegister}>Register</button>
+      <button onClick={handleLogin}>Login</button>
     </div>
   );
 }

@@ -1,26 +1,28 @@
+// frontend/src/api/auth.js
 import axios from "axios";
 
-// กำหนด base URL ของ backend
-// สำหรับ develop: browser เรียก localhost:5000
-const API_BASE_URL = "http://localhost:5000/api/auth";
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+  withCredentials: false
+});
 
-export const login = async (email, password) => {
+export async function register(email, password, name) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/login`, {
-      email,
-      password,
-    });
-    // return data จาก backend
-    return response.data;
-  } catch (error) {
-    console.error("Login error:", error);
-    // return error message
-    if (error.response) {
-      // backend ส่ง response กลับ
-      return { error: error.response.data.message || "Login failed" };
-    } else {
-      // network หรือ connection error
-      return { error: "Cannot connect to server" };
-    }
+    const res = await api.post("/api/auth/register", { email, password, name });
+    return res.data;
+  } catch (err) {
+    // ป้องกัน undefined error
+    const msg = err.response?.data?.message || err.message || "Register failed";
+    throw new Error(msg);
   }
-};
+}
+
+export async function login(email, password) {
+  try {
+    const res = await api.post("/api/auth/login", { email, password });
+    return res.data;
+  } catch (err) {
+    const msg = err.response?.data?.message || err.message || "Login failed";
+    throw new Error(msg);
+  }
+}

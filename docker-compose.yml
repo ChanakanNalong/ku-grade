@@ -38,7 +38,7 @@ services:
       MYSQL_ROOT_PASSWORD: "@Kan11113@05110405"
       MYSQL_DATABASE: ku-grade
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - db_data:/var/lib/mysql

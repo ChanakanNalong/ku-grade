@@ -41,7 +41,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Register
-  if (req.url === "/api/auth/register" && req.method === "POST") {
+  if ((req.url === "/api/auth/register" || req.url === "/api/register") && req.method === "POST") {
     try {
       const { email, password, name } = await getRequestBody(req);
 
@@ -72,7 +72,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Login
-  if (req.url === "/api/auth/login" && req.method === "POST") {
+  if ((req.url === "/api/auth/login" || req.url === "/api/login") && req.method === "POST") {
     try {
       const { email, password } = await getRequestBody(req);
 

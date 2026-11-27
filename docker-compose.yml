@@ -7,10 +7,12 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - DB_HOST=database
       - DB_USER=root
-      - DB_PASSWORD=@Kan11113@05110405
+      - DB_PASSWORD=${DB_PASSWORD:?set DB_PASSWORD in .env}
       - DB_NAME=ku-grade
     command: ["/wait-for-it.sh", "database:3306", "--", "node", "server.js"]
     depends_on:
@@ -34,10 +36,12 @@ services:
     container_name: ku-grade-database
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: "@Kan11113@05110405"
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
       MYSQL_DATABASE: ku-grade
-    ports:
-      - "3307:3306"
+    # port 3307 intentionally NOT published — DB reachable only on the
+    # internal compose network (service name "database"), not from the host
+    expose:
+      - "3306"
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - db_data:/var/lib/mysql

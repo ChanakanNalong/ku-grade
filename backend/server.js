@@ -24,6 +24,29 @@ const MAX_BODY_BYTES = 10 * 1024; // 10 KB — kills oversized-body DoS
 const BCRYPT_ROUNDS = 10;
 const RL_MAX = 5; // max login attempts...
 const RL_WINDOW_MS = 60 * 1000; // ...per IP per 60s
+// How many trusted reverse proxies sit in front of this app.
+// 0 (default) = direct connection, trust only the real socket IP and ignore
+// X-Forwarded-For entirely (a client can forge that header). Set to the number
+// of proxies you control (e.g. 1 behind one nginx) to read the real client IP.
+const TRUST_PROXY_HOPS = parseInt(process.env.TRUST_PROXY_HOPS || "0", 10) || 0;
+
+// Resolve the client IP for rate limiting.
+// X-Forwarded-For reads left-to-right as: client, proxy1, ..., proxyN(nearest us).
+// Each proxy appends the address it saw, so entries nearer the right are set by
+// infrastructure closer to us and are harder to forge. We build a chain from our
+// socket outward and step TRUST_PROXY_HOPS entries in; anything the client stuffed
+// in on the left sits beyond that point and is ignored.
+function clientIp(req) {
+  const socketIp = req.socket.remoteAddress || "unknown";
+  if (TRUST_PROXY_HOPS <= 0) return socketIp;
+  const xff = String(req.headers["x-forwarded-for"] || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const chain = [socketIp, ...xff.reverse()]; // [nearest ... client]
+  const idx = Math.min(TRUST_PROXY_HOPS, chain.length - 1);
+  return chain[idx] || socketIp;
+}
 // dummy hash so "user not found" takes the same time as "wrong password"
 const DUMMY_HASH = bcrypt.hashSync("dummy-password-for-timing", BCRYPT_ROUNDS);
 
@@ -100,7 +123,7 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  const ip = req.socket.remoteAddress || "unknown";
+  const ip = clientIp(req);
 
   // ---------- Register ----------
   if ((req.url === "/api/auth/register" || req.url === "/api/register") && req.method === "POST") {
